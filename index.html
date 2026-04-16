@@ -1,0 +1,528 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --surface3: #24243200;
+    --accent: #e8c87a;
+    --accent2: #c46b3a;
+    --text: #f0ede8;
+    --muted: #7a7890;
+    --border: rgba(255,255,255,0.07);
+    --red: #e84a5f;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+  .app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 1fr 90px; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    grid-row: 1 / 2;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; fill: #0a0a0f; }
+  .logo-text { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--text); }
+
+  .nav { display: flex; flex-direction: column; gap: 4px; }
+  .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; padding: 0 10px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px;
+    cursor: pointer; font-size: 14px; font-weight: 400; color: var(--muted); transition: all 0.2s;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: rgba(232,200,122,0.1); color: var(--accent); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .playlists { display: flex; flex-direction: column; gap: 10px; }
+  .playlist-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px; cursor: pointer; border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .playlist-item:hover { background: var(--surface2); }
+  .playlist-thumb { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; flex-shrink: 0; background: var(--surface2); }
+  .playlist-info { overflow: hidden; }
+  .playlist-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .playlist-count { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* MAIN */
+  .main { grid-row: 1 / 2; overflow-y: auto; background: var(--bg); }
+
+  .hero {
+    background: linear-gradient(160deg, #1e1a2e 0%, #12121c 60%);
+    padding: 40px 36px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -60px; right: -40px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(232,200,122,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute; bottom: -80px; left: 10%;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(196,107,58,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .hero-tag { font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  .hero-title { font-family: 'Playfair Display', serif; font-size: 42px; font-weight: 700; line-height: 1.15; color: var(--text); margin-bottom: 8px; }
+  .hero-title span { color: var(--accent); }
+  .hero-sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; font-weight: 300; }
+
+  .hero-btns { display: flex; gap: 12px; align-items: center; }
+  .btn-play {
+    display: flex; align-items: center; gap: 8px; background: var(--accent); color: #0a0a0f;
+    border: none; border-radius: 50px; padding: 12px 24px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-play:hover { transform: scale(1.04); opacity: 0.9; }
+  .btn-outline {
+    display: flex; align-items: center; gap: 8px; background: transparent; color: var(--text);
+    border: 1px solid var(--border); border-radius: 50px; padding: 12px 24px; font-size: 14px;
+    cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-outline:hover { background: var(--surface2); border-color: var(--muted); }
+
+  .section { padding: 32px 36px; }
+  .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 22px; }
+  .section-title { font-size: 20px; font-weight: 600; color: var(--text); }
+  .see-all { font-size: 13px; color: var(--muted); cursor: pointer; transition: color 0.2s; }
+  .see-all:hover { color: var(--accent); }
+
+  /* SONG CARDS */
+  .songs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 18px; }
+  .song-card {
+    background: var(--surface); border-radius: 12px; padding: 14px; cursor: pointer;
+    transition: all 0.25s; border: 1px solid transparent; position: relative; overflow: hidden;
+  }
+  .song-card:hover { background: var(--surface2); border-color: var(--border); transform: translateY(-2px); }
+  .song-card.active { border-color: rgba(232,200,122,0.3); background: rgba(232,200,122,0.05); }
+  .song-cover {
+    width: 100%; aspect-ratio: 1; border-radius: 8px; margin-bottom: 12px;
+    position: relative; overflow: hidden;
+  }
+  .song-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .song-cover-fallback {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 36px; border-radius: 8px;
+  }
+  .play-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s; border-radius: 8px;
+  }
+  .song-card:hover .play-overlay, .song-card.active .play-overlay { opacity: 1; }
+  .play-overlay svg { width: 36px; height: 36px; fill: white; }
+  .song-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .song-artist { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .song-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+  .song-duration { font-size: 11px; color: var(--muted); }
+  .heart-btn { background: none; border: none; cursor: pointer; padding: 2px; color: var(--muted); transition: color 0.2s; }
+  .heart-btn:hover, .heart-btn.liked { color: var(--red); }
+
+  /* TRACK LIST */
+  .track-list { display: flex; flex-direction: column; gap: 2px; }
+  .track-row {
+    display: grid; grid-template-columns: 40px 1fr 80px 50px;
+    align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .track-row:hover { background: var(--surface2); }
+  .track-row.active { background: rgba(232,200,122,0.07); }
+  .track-num { font-size: 13px; color: var(--muted); text-align: center; }
+  .track-row.active .track-num { color: var(--accent); }
+  .track-info { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+  .track-thumb { width: 40px; height: 40px; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .track-texts { overflow: hidden; }
+  .track-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-row.active .track-title { color: var(--accent); }
+  .track-artist { font-size: 12px; color: var(--muted); }
+  .track-plays { font-size: 12px; color: var(--muted); text-align: right; }
+  .track-dur { font-size: 12px; color: var(--muted); text-align: right; }
+
+  /* PLAYER */
+  .player {
+    grid-column: 1 / 3;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: grid; grid-template-columns: 1fr 1.5fr 1fr;
+    align-items: center; padding: 0 28px; gap: 20px;
+  }
+
+  .player-song { display: flex; align-items: center; gap: 14px; }
+  .player-thumb { width: 52px; height: 52px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .player-title { font-size: 14px; font-weight: 500; color: var(--text); }
+  .player-artist { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .player-like { background: none; border: none; cursor: pointer; color: var(--muted); margin-left: 10px; padding: 4px; transition: color 0.2s; }
+  .player-like:hover, .player-like.liked { color: var(--red); }
+
+  .player-controls { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .ctrl-btns { display: flex; align-items: center; gap: 20px; }
+  .ctrl-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; transition: color 0.2s; display: flex; }
+  .ctrl-btn:hover { color: var(--text); }
+  .ctrl-btn svg { width: 18px; height: 18px; }
+  .ctrl-btn.main-play { color: var(--text); width: 40px; height: 40px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0a0a0f; padding: 0; }
+  .ctrl-btn.main-play svg { width: 18px; height: 18px; fill: #0a0a0f; }
+  .ctrl-btn.main-play:hover { transform: scale(1.08); opacity: 0.9; }
+
+  .progress-bar { display: flex; align-items: center; gap: 10px; width: 100%; }
+  .time { font-size: 11px; color: var(--muted); min-width: 32px; }
+  .time.end { text-align: right; }
+  .progress-track {
+    flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; cursor: pointer;
+    position: relative; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s linear; }
+
+  .player-right { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+  .vol-btn { background: none; border: none; cursor: pointer; color: var(--muted); display: flex; transition: color 0.2s; }
+  .vol-btn:hover { color: var(--text); }
+  .vol-btn svg { width: 18px; height: 18px; }
+  .vol-slider { -webkit-appearance: none; appearance: none; width: 90px; height: 4px; border-radius: 2px; background: var(--surface2); outline: none; cursor: pointer; }
+  .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--text); cursor: pointer; }
+
+  /* Scrollbar */
+  .main::-webkit-scrollbar { width: 6px; }
+  .main::-webkit-scrollbar-track { background: transparent; }
+  .main::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+  .eq-bars { display: flex; gap: 2px; align-items: flex-end; height: 14px; }
+  .eq-bar { width: 3px; background: var(--accent); border-radius: 1px; animation: eq 0.7s ease-in-out infinite alternate; }
+  .eq-bar:nth-child(1) { height: 6px; animation-delay: 0s; }
+  .eq-bar:nth-child(2) { height: 10px; animation-delay: 0.15s; }
+  .eq-bar:nth-child(3) { height: 14px; animation-delay: 0.3s; }
+  .eq-bar:nth-child(4) { height: 8px; animation-delay: 0.1s; }
+  @keyframes eq { to { height: 4px; } }
+  .eq-bars.paused .eq-bar { animation-play-state: paused; }
+</style>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </div>
+      <span class="logo-text">Nhạc VN</span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Menu</div>
+      <div class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        Home
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        Discover
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        My Library
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        Liked Songs
+      </div>
+    </nav>
+
+    <div class="playlists">
+      <div class="nav-label">Playlists</div>
+      <div class="playlist-item">
+        <div class="playlist-thumb" style="background: linear-gradient(135deg,#e8c87a,#c46b3a); display:flex;align-items:center;justify-content:center;font-size:18px;">🌴</div>
+        <div class="playlist-info">
+          <div class="playlist-name">V-Pop Hits</div>
+          <div class="playlist-count">12 songs</div>
+        </div>
+      </div>
+      <div class="playlist-item">
+        <div class="playlist-thumb" style="background: linear-gradient(135deg,#7c3aed,#4f46e5); display:flex;align-items:center;justify-content:center;font-size:18px;">🌙</div>
+        <div class="playlist-info">
+          <div class="playlist-name">Lo-fi Việt</div>
+          <div class="playlist-count">8 songs</div>
+        </div>
+      </div>
+      <div class="playlist-item">
+        <div class="playlist-thumb" style="background: linear-gradient(135deg,#0ea5e9,#06b6d4); display:flex;align-items:center;justify-content:center;font-size:18px;">🎸</div>
+        <div class="playlist-info">
+          <div class="playlist-name">Indie VN</div>
+          <div class="playlist-count">20 songs</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="hero">
+      <div class="hero-tag">✦ Featured today</div>
+      <div class="hero-title">The sound of<br><span>Việt Nam</span></div>
+      <div class="hero-sub">Discover the best Vietnamese music — from soulful ballads to vibrant V-Pop</div>
+      <div class="hero-btns">
+        <button class="btn-play" onclick="playTrack(0)">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Play all
+        </button>
+        <button class="btn-outline">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+          Shuffle
+        </button>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <div class="section-title">Featured Songs</div>
+        <div class="see-all">See all →</div>
+      </div>
+      <div class="songs-grid" id="songsGrid"></div>
+    </section>
+
+    <section class="section" style="padding-top: 0;">
+      <div class="section-header">
+        <div class="section-title">Popular Tracks</div>
+        <div class="see-all">See all →</div>
+      </div>
+      <div class="track-list" id="trackList"></div>
+    </section>
+  </main>
+
+  <footer class="player">
+    <div class="player-song">
+      <div class="player-thumb" id="playerThumb" style="background: linear-gradient(135deg,#e8c87a,#c46b3a);">🎵</div>
+      <div>
+        <div class="player-title" id="playerTitle">Select a song</div>
+        <div class="player-artist" id="playerArtist">—</div>
+      </div>
+      <button class="player-like" id="playerLike" onclick="togglePlayerLike()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+    </div>
+
+    <div class="player-controls">
+      <div class="ctrl-btns">
+        <button class="ctrl-btn" onclick="prevTrack()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+        <button class="ctrl-btn main-play" id="mainPlay" onclick="togglePlay()">
+          <svg id="playIcon" viewBox="0 0 24 24" fill="#0a0a0f"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="ctrl-btn" onclick="nextTrack()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2.5-6 8.5 6V6z"/></svg>
+        </button>
+        <div class="eq-bars paused" id="eqBars">
+          <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <span class="time" id="curTime">0:00</span>
+        <div class="progress-track" onclick="seek(event)">
+          <div class="progress-fill" id="progFill" style="width:0%"></div>
+        </div>
+        <span class="time end" id="endTime">0:00</span>
+      </div>
+    </div>
+
+    <div class="player-right">
+      <button class="vol-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+      </button>
+      <input type="range" class="vol-slider" min="0" max="100" value="80" />
+      <button class="ctrl-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M7 7H5v3H2v2h3v3h2v-3h3v-2H7V7zm1 16 5-5 5 5V3h-2v16l-3-3-3 3V3H8v20z"/></svg>
+      </button>
+    </div>
+  </footer>
+</div>
+
+<script>
+const songs = [
+  {
+    id: 0, title: "Chúng Ta Của Hiện Tại", artist: "Sơn Tùng M-TP",
+    album: "Sky Tour", duration: "4:22", durationSec: 262, plays: "42.1M",
+    bg: "linear-gradient(135deg,#1a1a2e,#16213e)", emoji: "🌃", color: "#6c63ff"
+  },
+  {
+    id: 1, title: "Có Chắc Yêu Là Đây", artist: "Sơn Tùng M-TP",
+    album: "Sky Tour", duration: "3:58", durationSec: 238, plays: "35.8M",
+    bg: "linear-gradient(135deg,#0f3460,#533483)", emoji: "💫", color: "#e94560"
+  },
+  {
+    id: 2, title: "Bước Qua Mùa Cô Đơn", artist: "Hà Anh Tuấn",
+    album: "Portrait", duration: "4:45", durationSec: 285, plays: "28.3M",
+    bg: "linear-gradient(135deg,#1b4332,#2d6a4f)", emoji: "🍃", color: "#52b788"
+  },
+  {
+    id: 3, title: "Người Hãy Quên Em Đi", artist: "Mỹ Tâm",
+    album: "Timeless", duration: "4:10", durationSec: 250, plays: "51.7M",
+    bg: "linear-gradient(135deg,#3d0c02,#7b2d00)", emoji: "🌹", color: "#e8c87a"
+  },
+  {
+    id: 4, title: "Thì Thôi", artist: "Tăng Duy Tân",
+    album: "Monsoon", duration: "3:37", durationSec: 217, plays: "19.4M",
+    bg: "linear-gradient(135deg,#1a1a2e,#2c2c54)", emoji: "🌧️", color: "#74b9ff"
+  }
+];
+
+let currentTrack = -1;
+let isPlaying = false;
+let progress = 0;
+let intervalId = null;
+let likedTracks = new Set();
+
+function renderCards() {
+  const grid = document.getElementById('songsGrid');
+  grid.innerHTML = songs.map((s, i) => `
+    <div class="song-card ${currentTrack===i?'active':''}" id="card-${i}" onclick="playTrack(${i})">
+      <div class="song-cover">
+        <div class="song-cover-fallback" style="background:${s.bg}">${s.emoji}</div>
+        <div class="play-overlay">
+          ${currentTrack===i&&isPlaying
+            ? `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
+            : `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`
+          }
+        </div>
+      </div>
+      <div class="song-name">${s.title}</div>
+      <div class="song-artist">${s.artist}</div>
+      <div class="song-meta">
+        <span class="song-duration">${s.duration}</span>
+        <button class="heart-btn ${likedTracks.has(i)?'liked':''}" onclick="event.stopPropagation();toggleLike(${i})">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTracks() {
+  const list = document.getElementById('trackList');
+  list.innerHTML = songs.map((s, i) => `
+    <div class="track-row ${currentTrack===i?'active':''}" id="row-${i}" onclick="playTrack(${i})">
+      <div class="track-num">
+        ${currentTrack===i&&isPlaying ? `<div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>` : i+1}
+      </div>
+      <div class="track-info">
+        <div class="track-thumb" style="background:${s.bg}">${s.emoji}</div>
+        <div class="track-texts">
+          <div class="track-title">${s.title}</div>
+          <div class="track-artist">${s.artist}</div>
+        </div>
+      </div>
+      <div class="track-plays">${s.plays}</div>
+      <div class="track-dur">${s.duration}</div>
+    </div>
+  `).join('');
+}
+
+function updatePlayer(idx) {
+  const s = songs[idx];
+  document.getElementById('playerTitle').textContent = s.title;
+  document.getElementById('playerArtist').textContent = s.artist;
+  document.getElementById('playerThumb').style.background = s.bg;
+  document.getElementById('playerThumb').textContent = s.emoji;
+  document.getElementById('endTime').textContent = s.duration;
+  document.getElementById('playerLike').classList.toggle('liked', likedTracks.has(idx));
+}
+
+function playTrack(idx) {
+  if (currentTrack === idx) { togglePlay(); return; }
+  currentTrack = idx;
+  isPlaying = true;
+  progress = 0;
+  clearInterval(intervalId);
+  startProgress();
+  updatePlayer(idx);
+  renderCards();
+  renderTracks();
+  updatePlayBtn();
+}
+
+function startProgress() {
+  const s = songs[currentTrack];
+  const step = 100 / s.durationSec;
+  document.getElementById('eqBars').classList.remove('paused');
+  intervalId = setInterval(() => {
+    if (!isPlaying) return;
+    progress = Math.min(progress + step, 100);
+    document.getElementById('progFill').style.width = progress + '%';
+    const elapsed = Math.round((progress / 100) * s.durationSec);
+    const m = Math.floor(elapsed / 60), sec = elapsed % 60;
+    document.getElementById('curTime').textContent = `${m}:${sec.toString().padStart(2,'0')}`;
+    if (progress >= 100) { nextTrack(); }
+  }, 1000);
+}
+
+function togglePlay() {
+  if (currentTrack < 0) { playTrack(0); return; }
+  isPlaying = !isPlaying;
+  updatePlayBtn();
+  if (isPlaying) {
+    document.getElementById('eqBars').classList.remove('paused');
+    if (!intervalId) startProgress();
+  } else {
+    document.getElementById('eqBars').classList.add('paused');
+  }
+  renderCards(); renderTracks();
+}
+
+function updatePlayBtn() {
+  const icon = document.getElementById('playIcon');
+  icon.innerHTML = isPlaying
+    ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+    : '<path d="M8 5v14l11-7z"/>';
+}
+
+function nextTrack() {
+  clearInterval(intervalId); intervalId = null;
+  progress = 0;
+  playTrack((currentTrack + 1) % songs.length);
+}
+
+function prevTrack() {
+  clearInterval(intervalId); intervalId = null;
+  progress = 0;
+  playTrack((currentTrack - 1 + songs.length) % songs.length);
+}
+
+function seek(e) {
+  if (currentTrack < 0) return;
+  const bar = e.currentTarget;
+  const pct = e.offsetX / bar.offsetWidth * 100;
+  progress = Math.max(0, Math.min(100, pct));
+  document.getElementById('progFill').style.width = progress + '%';
+}
+
+function toggleLike(idx) {
+  if (likedTracks.has(idx)) likedTracks.delete(idx);
+  else likedTracks.add(idx);
+  renderCards(); renderTracks();
+  if (currentTrack === idx) document.getElementById('playerLike').classList.toggle('liked', likedTracks.has(idx));
+}
+
+function togglePlayerLike() { if (currentTrack >= 0) toggleLike(currentTrack); }
+
+renderCards();
+renderTracks();
+</script>
