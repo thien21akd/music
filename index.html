@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhạc VN – Vietnamese Music Player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f2ee;--surface:#ffffff;--surface2:#f0ede8;--surface3:#e8e4dd;
+  --accent:#ff5500;--accent2:#ff7733;--text:#1a1a1a;--muted:#888;
+  --border:rgba(0,0,0,0.1);--red:#e0245e;--player-bg:#1a1a1a;
+  --sidebar-bg:#ffffff;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
+.app{display:grid;grid-template-columns:220px 1fr;grid-template-rows:calc(100vh - 80px) 80px;height:100vh;overflow:hidden}
+.sidebar{background:var(--sidebar-bg);border-right:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;gap:24px;overflow-y:auto;grid-row:1}
+.logo{display:flex;align-items:center;gap:8px;padding:0 4px}
+.logo-icon{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:16px;height:16px;fill:#fff}
+.logo-text{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-0.5px}
+.search-box{position:relative}
+.search-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:8px 12px 8px 34px;font-size:13px;color:var(--text);outline:none;transition:all 0.2s;font-family:'Inter',sans-serif}
+.search-box input:focus{background:var(--surface);border-color:var(--accent);box-shadow:0 0 0 2px rgba(255,85,0,0.1)}
+.search-box input::placeholder{color:var(--muted)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%)}
+.search-icon svg{width:14px;height:14px;fill:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;padding:0 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all 0.15s}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:rgba(255,85,0,0.08);color:var(--accent)}
+.nav-item svg{width:15px;height:15px;fill:currentColor;flex-shrink:0}
+.playlists-section{display:flex;flex-direction:column;gap:6px}
+.playlist-item{display:flex;align-items:center;gap:10px;padding:6px 8px;cursor:pointer;border-radius:8px;transition:background 0.15s}
+.playlist-item:hover{background:var(--surface2)}
+.playlist-thumb{width:36px;height:36px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.playlist-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.playlist-count{font-size:11px;color:var(--muted)}
+.main{grid-row:1;overflow-y:auto;background:var(--bg)}
+.main::-webkit-scrollbar{width:5px}
+.main::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px}
+.hero{padding:32px 28px;background:linear-gradient(160deg,#ff6600 0%,#cc3300 60%,#991100 100%);color:#fff;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40px;right:-60px;width:200px;height:200px;background:rgba(255,255,255,0.08);border-radius:50%}
+.hero-tag{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;opacity:0.8;margin-bottom:8px}
+.hero-title{font-size:32px;font-weight:700;line-height:1.2;margin-bottom:6px;letter-spacing:-0.5px}
+.hero-sub{font-size:13px;opacity:0.75;margin-bottom:22px;font-weight:300}
+.hero-btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn-play{display:flex;align-items:center;gap:7px;background:#fff;color:var(--accent);border:none;border-radius:50px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+.btn-play:hover{transform:scale(1.03);opacity:0.95}
+.btn-outline{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:50px;padding:10px 20px;font-size:13px;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif}
+.btn-outline:hover{background:rgba(255,255,255,0.25)}
+.section{padding:24px 28px}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.section-title{font-size:17px;font-weight:700;color:var(--text)}
+.see-all{font-size:12px;color:var(--accent);cursor:pointer;font-weight:500}
+.see-all:hover{text-decoration:underline}
+.songs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:14px}
+.song-card{background:var(--surface);border-radius:10px;padding:12px;cursor:pointer;transition:all 0.2s;border:1px solid var(--border);position:relative}
+.song-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.12);transform:translateY(-2px)}
+.song-card.active{border-color:var(--accent);box-shadow:0 4px 20px rgba(255,85,0,0.15)}
+.song-cover{width:100%;aspect-ratio:1;border-radius:7px;margin-bottom:10px;position:relative;overflow:hidden}
+.song-cover-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:32px}
+.play-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;border-radius:7px}
+.song-card:hover .play-overlay,.song-card.active .play-overlay{opacity:1}
+.play-overlay-btn{width:40px;height:40px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform 0.15s}
+.play-overlay-btn:hover{transform:scale(1.1)}
+.play-overlay-btn svg{width:18px;height:18px;fill:#fff;margin-left:2px}
+.song-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.song-artist{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.song-duration{font-size:10px;color:var(--muted)}
+.heart-btn{background:none;border:none;cursor:pointer;padding:2px;color:var(--muted);transition:color 0.15s;display:flex}
+.heart-btn:hover,.heart-btn.liked{color:var(--red)}
+.heart-btn svg{width:13px;height:13px;fill:currentColor}
+.track-list{display:flex;flex-direction:column}
+.track-row{display:grid;grid-template-columns:36px 1fr 70px 44px 36px;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background 0.12s}
+.track-row:hover{background:var(--surface)}
+.track-row.active{background:rgba(255,85,0,0.05)}
+.track-num{font-size:12px;color:var(--muted);text-align:center}
+.track-row.active .track-num{color:var(--accent)}
+.track-info{display:flex;align-items:center;gap:10px;overflow:hidden}
+.track-thumb{width:38px;height:38px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.track-texts{overflow:hidden}
+.track-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.track-row.active .track-title{color:var(--accent)}
+.track-artist{font-size:11px;color:var(--muted)}
+.track-plays{font-size:11px;color:var(--muted);text-align:right}
+.track-dur{font-size:11px;color:var(--muted);text-align:right}
+.track-heart{background:none;border:none;cursor:pointer;color:var(--muted);transition:color 0.15s;display:flex;padding:4px}
+.track-heart:hover,.track-heart.liked{color:var(--red)}
+.track-heart svg{width:14px;height:14px;fill:currentColor}
+.player{grid-column:1/3;background:var(--player-bg);border-top:1px solid rgba(255,255,255,0.05);display:grid;grid-template-columns:1fr 1.4fr 1fr;align-items:center;padding:0 24px;gap:16px}
+.player-song{display:flex;align-items:center;gap:12px;min-width:0}
+.player-thumb{width:48px;height:48px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.player-title{font-size:13px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-artist{font-size:11px;color:#888;margin-top:1px}
+.player-like{background:none;border:none;cursor:pointer;color:#888;margin-left:8px;padding:4px;transition:color 0.15s;flex-shrink:0;display:flex}
+.player-like:hover,.player-like.liked{color:var(--red)}
+.player-like svg{width:16px;height:16px;fill:currentColor}
+.player-controls{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ctrl-btns{display:flex;align-items:center;gap:16px}
+.ctrl-btn{background:none;border:none;cursor:pointer;color:#888;padding:4px;transition:color 0.15s;display:flex;border-radius:50%}
+.ctrl-btn:hover{color:#fff}
+.ctrl-btn svg{width:16px;height:16px;fill:currentColor}
+.ctrl-btn.active{color:var(--accent)}
+.ctrl-btn.main-play{width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0;color:#fff}
+.ctrl-btn.main-play:hover{transform:scale(1.08);opacity:0.9}
+.ctrl-btn.main-play svg{fill:#fff}
+.progress-bar{display:flex;align-items:center;gap:8px;width:100%}
+.time{font-size:10px;color:#666;min-width:28px;font-variant-numeric:tabular-nums}
+.time.end{text-align:right}
+.progress-track{flex:1;height:3px;background:#333;border-radius:2px;cursor:pointer;position:relative;transition:height 0.15s}
+.progress-track:hover{height:5px}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;pointer-events:none;transition:width 0.1s linear}
+.player-right{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.vol-btn{background:none;border:none;cursor:pointer;color:#888;display:flex;transition:color 0.15s}
+.vol-btn:hover{color:#fff}
+.vol-btn svg{width:16px;height:16px;fill:currentColor}
+.vol-slider{-webkit-appearance:none;appearance:none;width:80px;height:3px;border-radius:2px;background:#333;outline:none;cursor:pointer}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer}
+.queue-panel{display:none;position:fixed;right:0;top:0;bottom:80px;width:280px;background:var(--surface);border-left:1px solid var(--border);z-index:100;flex-direction:column;overflow:hidden;box-shadow:-4px 0 20px rgba(0,0,0,0.1)}
+.queue-panel.open{display:flex}
+.queue-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.queue-title{font-size:15px;font-weight:600;color:var(--text)}
+.queue-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px 6px}
+.queue-list{overflow-y:auto;flex:1;padding:8px}
+.queue-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;cursor:pointer;transition:background 0.15s}
+.queue-item:hover{background:var(--surface2)}
+.queue-item.active{background:rgba(255,85,0,0.08)}
+.queue-thumb{width:36px;height:36px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px}
+.queue-track-title{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.queue-track-artist{font-size:11px;color:var(--muted)}
+.search-results{display:none;flex-direction:column;gap:2px}
+.search-results.visible{display:flex}
+.home-view{display:block}
+.home-view.hidden{display:none}
+.liked-view{display:none}
+.liked-view.active{display:block}
+.search-view{display:none}
+.search-view.active{display:block}
+.eq-bars{display:flex;gap:2px;align-items:flex-end;height:12px}
+.eq-bar{width:2px;background:var(--accent);border-radius:1px;animation:eq 0.6s ease-in-out infinite alternate}
+.eq-bar:nth-child(1){height:5px;animation-delay:0s}
+.eq-bar:nth-child(2){height:9px;animation-delay:0.15s}
+.eq-bar:nth-child(3){height:12px;animation-delay:0.3s}
+.eq-bar:nth-child(4){height:7px;animation-delay:0.1s}
+@keyframes eq{to{height:2px}}
+.eq-bars.paused .eq-bar{animation-play-state:paused}
+</style>
+</head>
+<body>
+
+<audio id="audioPlayer"></audio>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </div>
+      <span class="logo-text">Nhạc VN</span>
+    </div>
+
+    <div class="search-box">
+      <div class="search-icon">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </div>
+      <input type="text" id="searchInput" placeholder="Tìm bài hát, nghệ sĩ..." oninput="handleSearch(this.value)" />
+    </div>
+
+    <nav class="nav">
+      <div class="nav-label">Menu</div>
+      <div class="nav-item active" id="nav-home" onclick="showView('home')">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        Trang chủ
+      </div>
+      <div class="nav-item" id="nav-liked" onclick="showView('liked')">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        Yêu thích
+        <span id="likedBadge" style="margin-left:auto;background:var(--accent);color:#fff;border-radius:20px;font-size:10px;padding:1px 7px;display:none">0</span>
+      </div>
+    </nav>
+
+    <div class="playlists-section">
+      <div class="nav-label">Danh sách phát</div>
+      <div class="playlist-item" onclick="playAll()">
+        <div class="playlist-thumb" style="background:linear-gradient(135deg,#ff6600,#cc2200)">🌴</div>
+        <div>
+          <div class="playlist-name">V-Pop Hits</div>
+          <div class="playlist-count">6 bài</div>
+        </div>
+      </div>
+      <div class="playlist-item">
+        <div class="playlist-thumb" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">🌙</div>
+        <div>
+          <div class="playlist-name">Lo-fi Việt</div>
+          <div class="playlist-count">8 bài</div>
+        </div>
+      </div>
+      <div class="playlist-item">
+        <div class="playlist-thumb" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4)">🎸</div>
+        <div>
+          <div class="playlist-name">Indie VN</div>
+          <div class="playlist-count">20 bài</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" id="mainContent">
+
+    <!-- HOME VIEW -->
+    <div class="home-view" id="homeView">
+      <div class="hero">
+        <div class="hero-tag">✦ Nổi bật hôm nay</div>
+        <div class="hero-title">Âm nhạc<br>Việt Nam</div>
+        <div class="hero-sub">Khám phá âm nhạc Việt hay nhất — từ ballad cảm xúc đến V-Pop sôi động</div>
+        <div class="hero-btns">
+          <button class="btn-play" onclick="playAll()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Phát tất cả
+          </button>
+          <button class="btn-outline" onclick="shufflePlay()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+            Ngẫu nhiên
+          </button>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="section-header">
+          <div class="section-title">Bài hát nổi bật</div>
+          <div class="see-all">Xem tất cả →</div>
+        </div>
+        <div class="songs-grid" id="songsGrid"></div>
+      </section>
+
+      <section class="section" style="padding-top:0">
+        <div class="section-header">
+          <div class="section-title">Bài hát phổ biến</div>
+          <div class="see-all">Xem tất cả →</div>
+        </div>
+        <div class="track-list" id="trackList"></div>
+      </section>
+    </div>
+
+    <!-- LIKED VIEW -->
+    <div class="liked-view" id="likedView">
+      <div style="padding:28px">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+          <div style="width:80px;height:80px;background:linear-gradient(135deg,#e0245e,#ff6b9d);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:36px">❤️</div>
+          <div>
+            <div style="font-size:22px;font-weight:700;color:var(--text)">Bài hát yêu thích</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px" id="likedCount">0 bài hát</div>
+          </div>
+        </div>
+        <div class="track-list" id="likedTrackList"></div>
+        <div id="emptyLiked" style="text-align:center;padding:40px;color:var(--muted);font-size:14px;display:none">
+          <div style="font-size:48px;margin-bottom:12px">🎵</div>
+          <div>Chưa có bài hát yêu thích.<br>Nhấn ♥ để thêm bài hát.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH VIEW -->
+    <div class="search-view" id="searchView">
+      <div style="padding:28px">
+        <div style="font-size:17px;font-weight:700;margin-bottom:16px;color:var(--text)" id="searchTitle">Kết quả tìm kiếm</div>
+        <div class="track-list search-results" id="searchResults"></div>
+        <div id="noResults" style="display:none;text-align:center;padding:40px;color:var(--muted);font-size:14px">
+          <div style="font-size:40px;margin-bottom:12px">🔍</div>
+          <div>Không tìm thấy kết quả</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PLAYER -->
+  <footer class="player">
+    <div class="player-song">
+      <div class="player-thumb" id="playerThumb" style="background:linear-gradient(135deg,#ff6600,#cc3300)">🎵</div>
+      <div style="overflow:hidden;flex:1;min-width:0">
+        <div class="player-title" id="playerTitle">Chọn bài hát</div>
+        <div class="player-artist" id="playerArtist">—</div>
+      </div>
+      <button class="player-like" id="playerLike" onclick="togglePlayerLike()">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+    </div>
+
+    <div class="player-controls">
+      <div class="ctrl-btns">
+        <button class="ctrl-btn" id="shuffleBtn" onclick="toggleShuffle()" title="Ngẫu nhiên">
+          <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+        </button>
+        <button class="ctrl-btn" onclick="prevTrack()" title="Bài trước">
+          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+        <button class="ctrl-btn main-play" id="mainPlay" onclick="togglePlay()">
+          <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="ctrl-btn" onclick="nextTrack()" title="Bài tiếp">
+          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2.5-6 8.5 6V6z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="repeatBtn" onclick="toggleRepeat()" title="Lặp lại">
+          <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+        </button>
+        <div class="eq-bars paused" id="eqBars">
+          <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <span class="time" id="curTime">0:00</span>
+        <div class="progress-track" id="progressTrack" onclick="seek(event)">
+          <div class="progress-fill" id="progFill" style="width:0%"></div>
+        </div>
+        <span class="time end" id="endTime">0:00</span>
+      </div>
+    </div>
+
+    <div class="player-right">
+      <button class="vol-btn" onclick="toggleMute()">
+        <svg id="volIcon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      </button>
+      <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="80" oninput="setVolume(this.value)" />
+      <button class="ctrl-btn" onclick="toggleQueue()" title="Danh sách chờ" id="queueBtn">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+      </button>
+    </div>
+  </footer>
+</div>
+
+<!-- QUEUE PANEL -->
+<div class="queue-panel" id="queuePanel">
+  <div class="queue-header">
+    <div class="queue-title">Danh sách chờ</div>
+    <button class="queue-close" onclick="toggleQueue()">✕</button>
+  </div>
+  <div class="queue-list" id="queueList"></div>
+</div>
+
+<script>
+const songs = [
+  {
+    id: 0, title: "Chúng Ta Của Hiện Tại", artist: "Sơn Tùng M-TP",
+    album: "Sky Tour", duration: "4:22", durationSec: 262, plays: "42.1M",
+    bg: "linear-gradient(135deg,#1a1a2e,#16213e)", emoji: "🌃",
+    src: "chungtacuahientai.mp3"
+  },
+  {
+    id: 1, title: "Có Chắc Yêu Là Đây", artist: "Sơn Tùng M-TP",
+    album: "Sky Tour", duration: "3:58", durationSec: 238, plays: "35.8M",
+    bg: "linear-gradient(135deg,#0f3460,#533483)", emoji: "💫",
+    src: "cochacyeuladay.mp3"
+  },
+  {
+    id: 2, title: "Bước Qua Mùa Cô Đơn", artist: "Hà Anh Tuấn",
+    album: "Portrait", duration: "4:45", durationSec: 285, plays: "28.3M",
+    bg: "linear-gradient(135deg,#1b4332,#2d6a4f)", emoji: "🍃",
+    src: ""
+  },
+  {
+    id: 3, title: "Người Hãy Quên Em Đi", artist: "Mỹ Tâm",
+    album: "Timeless", duration: "4:10", durationSec: 250, plays: "51.7M",
+    bg: "linear-gradient(135deg,#3d0c02,#7b2d00)", emoji: "🌹",
+    src: ""
+  },
+  {
+    id: 4, title: "Thì Thôi", artist: "Tăng Duy Tân",
+    album: "Monsoon", duration: "3:37", durationSec: 217, plays: "19.4M",
+    bg: "linear-gradient(135deg,#1a1a2e,#2c2c54)", emoji: "🌧️",
+    src: ""
+  },
+  {
+    id: 5, title: "50 Năm Về Sau Remix", artist: "F47",
+    album: "Special", duration: "3:37", durationSec: 217, plays: "22.1M",
+    bg: "linear-gradient(135deg,#b5451b,#ff6600)", emoji: "🔥",
+    src: "50namvesauremix.mp3"
+  }
+];
+
+let currentTrack = -1, isPlaying = false, isShuffled = false, repeatMode = 0;
+let isMuted = false, prevVol = 80;
+let likedTracks = new Set();
+const audio = document.getElementById("audioPlayer");
+
+function fmt(s) {
+  s = Math.floor(s || 0);
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+
+function renderCards() {
+  document.getElementById("songsGrid").innerHTML = songs.map((s, i) => `
+    <div class="song-card ${currentTrack === i ? "active" : ""}" onclick="playTrack(${i})">
+      <div class="song-cover">
+        <div class="song-cover-fallback" style="background:${s.bg}">${s.emoji}</div>
+        <div class="play-overlay">
+          <div class="play-overlay-btn">
+            <svg viewBox="0 0 24 24">${currentTrack === i && isPlaying
+              ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+              : '<path d="M8 5v14l11-7z"/>'}</svg>
+          </div>
+        </div>
+      </div>
+      <div class="song-name">${s.title}</div>
+      <div class="song-artist">${s.artist}</div>
+      <div class="song-meta">
+        <span class="song-duration">${s.duration}</span>
+        <button class="heart-btn ${likedTracks.has(i) ? "liked" : ""}" onclick="event.stopPropagation();toggleLike(${i})">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </button>
+      </div>
+    </div>`).join("");
+}
+
+function renderTrackRow(s, i, showIdx = true) {
+  return `<div class="track-row ${currentTrack === i ? "active" : ""}" onclick="playTrack(${i})">
+    <div class="track-num">${currentTrack === i && isPlaying
+      ? '<div class="eq-bars"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>'
+      : showIdx ? i + 1 : ""}</div>
+    <div class="track-info">
+      <div class="track-thumb" style="background:${s.bg}">${s.emoji}</div>
+      <div class="track-texts">
+        <div class="track-title">${s.title}</div>
+        <div class="track-artist">${s.artist}</div>
+      </div>
+    </div>
+    <div class="track-plays">${s.plays}</div>
+    <div class="track-dur">${s.duration}</div>
+    <button class="track-heart ${likedTracks.has(i) ? "liked" : ""}" onclick="event.stopPropagation();toggleLike(${i})">
+      <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+    </button>
+  </div>`;
+}
+
+function renderTracks() {
+  document.getElementById("trackList").innerHTML = songs.map((s, i) => renderTrackRow(s, i)).join("");
+}
+
+function renderLiked() {
+  const liked = [...likedTracks];
+  document.getElementById("likedCount").textContent = liked.length + " bài hát";
+  document.getElementById("emptyLiked").style.display = liked.length === 0 ? "block" : "none";
+  document.getElementById("likedTrackList").innerHTML = liked.map(i => renderTrackRow(songs[i], i, false)).join("");
+  const b = document.getElementById("likedBadge");
+  b.textContent = liked.length;
+  b.style.display = liked.length > 0 ? "inline" : "none";
+}
+
+function renderQueue() {
+  document.getElementById("queueList").innerHTML = songs.map((s, i) => `
+    <div class="queue-item ${currentTrack === i ? "active" : ""}" onclick="playTrack(${i})">
+      <div class="queue-thumb" style="background:${s.bg}">${s.emoji}</div>
+      <div style="overflow:hidden;flex:1;min-width:0">
+        <div class="queue-track-title">${s.title}</div>
+        <div class="queue-track-artist">${s.artist}</div>
+      </div>
+      ${currentTrack === i && isPlaying
+        ? '<div class="eq-bars" style="margin-right:4px"><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div></div>'
+        : ""}
+    </div>`).join("");
+}
+
+function updatePlayer(i) {
+  const s = songs[i];
+  document.getElementById("playerTitle").textContent = s.title;
+  document.getElementById("playerArtist").textContent = s.artist;
+  document.getElementById("playerThumb").style.background = s.bg;
+  document.getElementById("playerThumb").textContent = s.emoji;
+  document.getElementById("playerLike").classList.toggle("liked", likedTracks.has(i));
+}
+
+function playTrack(i) {
+  if (currentTrack === i) { togglePlay(); return; }
+  currentTrack = i;
+  isPlaying = true;
+  const s = songs[i];
+  if (s.src) {
+    audio.src = s.src; audio.load(); audio.play().catch(() => {});
+  } else {
+    audio.src = "";
+    document.getElementById("progFill").style.width = "0%";
+    document.getElementById("endTime").textContent = fmt(s.durationSec);
+  }
+  updatePlayer(i); updatePlayBtn();
+  document.getElementById("eqBars").classList.remove("paused");
+  renderCards(); renderTracks(); renderLiked(); renderQueue();
+}
+
+function togglePlay() {
+  if (currentTrack < 0) { playTrack(0); return; }
+  isPlaying = !isPlaying;
+  if (isPlaying) {
+    if (audio.src) audio.play().catch(() => {});
+    document.getElementById("eqBars").classList.remove("paused");
+  } else {
+    audio.pause();
+    document.getElementById("eqBars").classList.add("paused");
+  }
+  updatePlayBtn(); renderCards(); renderTracks(); renderLiked(); renderQueue();
+}
+
+function updatePlayBtn() {
+  document.getElementById("playIcon").innerHTML = isPlaying
+    ? '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'
+    : '<path d="M8 5v14l11-7z"/>';
+}
+
+function nextTrack() {
+  let next;
+  if (isShuffled) {
+    do { next = Math.floor(Math.random() * songs.length); } while (next === currentTrack && songs.length > 1);
+  } else {
+    next = (currentTrack + 1) % songs.length;
+  }
+  playTrack(next);
+}
+
+function prevTrack() {
+  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+  playTrack((currentTrack - 1 + songs.length) % songs.length);
+}
+
+function playAll() { playTrack(0); }
+
+function shufflePlay() {
+  isShuffled = true;
+  document.getElementById("shuffleBtn").classList.add("active");
+  playTrack(Math.floor(Math.random() * songs.length));
+}
+
+function toggleShuffle() {
+  isShuffled = !isShuffled;
+  document.getElementById("shuffleBtn").classList.toggle("active", isShuffled);
+}
+
+function toggleRepeat() {
+  repeatMode = (repeatMode + 1) % 3;
+  const btn = document.getElementById("repeatBtn");
+  btn.classList.toggle("active", repeatMode > 0);
+  btn.title = ["Lặp lại", "Lặp tất cả", "Lặp một bài"][repeatMode];
+  if (repeatMode === 2) {
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/><text x="12" y="14" text-anchor="middle" font-size="7" fill="currentColor" font-weight="700">1</text></svg>';
+  } else {
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>';
+  }
+}
+
+function toggleLike(i) {
+  likedTracks.has(i) ? likedTracks.delete(i) : likedTracks.add(i);
+  renderCards(); renderTracks(); renderLiked();
+  if (currentTrack === i)
+    document.getElementById("playerLike").classList.toggle("liked", likedTracks.has(i));
+}
+function togglePlayerLike() { if (currentTrack >= 0) toggleLike(currentTrack); }
+
+function setVolume(v) { audio.volume = v / 100; isMuted = v == 0; updateVolIcon(); }
+
+function toggleMute() {
+  isMuted = !isMuted;
+  const slider = document.getElementById("volSlider");
+  if (isMuted) {
+    prevVol = slider.value; audio.volume = 0; slider.value = 0;
+  } else {
+    slider.value = prevVol; audio.volume = prevVol / 100;
+  }
+  updateVolIcon();
+}
+
+function updateVolIcon() {
+  const v = parseInt(document.getElementById("volSlider").value);
+  document.getElementById("volIcon").innerHTML = v === 0
+    ? '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>'
+    : '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>';
+}
+
+function seek(e) {
+  if (!audio.duration) return;
+  const pct = e.offsetX / e.currentTarget.offsetWidth;
+  audio.currentTime = pct * audio.duration;
+}
+
+audio.addEventListener("timeupdate", () => {
+  if (!audio.duration) return;
+  const p = (audio.currentTime / audio.duration) * 100;
+  document.getElementById("progFill").style.width = p + "%";
+  document.getElementById("curTime").textContent = fmt(audio.currentTime);
+});
+
+audio.addEventListener("loadedmetadata", () => {
+  document.getElementById("endTime").textContent = fmt(audio.duration);
+});
+
+audio.addEventListener("ended", () => {
+  if (repeatMode === 2) { audio.currentTime = 0; audio.play(); }
+  else if (repeatMode === 1) { nextTrack(); }
+  else if (currentTrack < songs.length - 1) { nextTrack(); }
+  else {
+    isPlaying = false; updatePlayBtn();
+    document.getElementById("eqBars").classList.add("paused");
+    renderCards(); renderTracks();
+  }
+});
+
+function handleSearch(q) {
+  q = q.trim();
+  if (!q) { if (document.getElementById("searchView").classList.contains("active")) showView("home"); return; }
+  showView("search");
+  const results = songs.map((s, i) => ({ s, i })).filter(({ s }) =>
+    s.title.toLowerCase().includes(q.toLowerCase()) || s.artist.toLowerCase().includes(q.toLowerCase())
+  );
+  document.getElementById("searchTitle").textContent = `Kết quả cho "${q}"`;
+  document.getElementById("noResults").style.display = results.length === 0 ? "block" : "none";
+  document.getElementById("searchResults").style.display = results.length > 0 ? "flex" : "none";
+  document.getElementById("searchResults").innerHTML = results.map(({ s, i }) => renderTrackRow(s, i)).join("");
+}
+
+function showView(v) {
+  document.getElementById("homeView").classList.toggle("hidden", v !== "home");
+  document.getElementById("likedView").classList.toggle("active", v === "liked");
+  document.getElementById("searchView").classList.toggle("active", v === "search");
+  ["nav-home", "nav-liked"].forEach(id => document.getElementById(id).classList.remove("active"));
+  if (v === "home") document.getElementById("nav-home").classList.add("active");
+  if (v === "liked") document.getElementById("nav-liked").classList.add("active");
+}
+
+function toggleQueue() {
+  const p = document.getElementById("queuePanel");
+  const isOpen = p.classList.toggle("open");
+  document.getElementById("queueBtn").classList.toggle("active", isOpen);
+  if (isOpen) renderQueue();
+}
+
+// Init
+renderCards();
+renderTracks();
+renderLiked();
+audio.volume = 0.8;
+</script>
+</body>
+</html>
